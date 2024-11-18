@@ -54,7 +54,7 @@ class UI:
     def read_input(self):
         """Reads input from the terminal and calls the callback."""
         while not rospy.is_shutdown():
-            user_input = input("Enter some text: ")  # Wait for the user to enter text
+            user_input = input("Enter control line: ")  # Wait for the user to enter text
             self.input_callback(user_input)
 
     def input_callback(self, text):
@@ -66,7 +66,7 @@ class UI:
 		
     		# Ensure the input has exactly 3 parts: turtle number, linear velocity, angular velocity
     		if len(parts) != 3:
-    			raise ValueError("Incorrect format! Expected 'turtle_number linear_velocity angular_velocity'.")
+    			raise ValueError("Incorrect format! Expected 3 arguments which are : 'turtle_number linear_velocity angular_velocity'.")
 		
     		# Parse the first part as turtle number (either 1 or 2)
     		turtle_number = parts[0]
@@ -84,6 +84,24 @@ class UI:
     			angular_velocity = float(parts[2])
     		except ValueError:
     			raise ValueError("Angular velocity must be a valid number.")
+    			
+    		#Apply thresholds for both linear and angular velocities
+    		MAX_LINEAR_VELOCITY = 2.5
+    		MAX_ANGULAR_VELOCITY = 1.5
+    		
+    		if linear_velocity > MAX_LINEAR_VELOCITY:
+    			rospy.logwarn(f"linear velocity {linear_velocity} exceeds max threshold. Clamped to {MAX_LINEAR_VELOCITY}.")
+    			linear_velocity = MAX_LINEAR_VELOCITY
+    		elif linear_velocity < -MAX_LINEAR_VELOCITY:
+    			rospy.logwarn(f"linear velocity {linear_velocity} below min threshold. Clamped to {-MAX_LINEAR_VELOCITY}.")
+    			linear_velocity = -MAX_LINEAR_VELOCITY
+    		
+    		if angular_velocity > MAX_ANGULAR_VELOCITY:
+    			rospy.logwarn(f"Angular velocity {angular_velocity} exceeds max threshold. Clamped to {MAX_ANGULAR_VELOCITY}.")
+    			angular_velocity = MAX_ANGULAR_VELOCITY
+    		elif angular_velocity < -MAX_ANGULAR_VELOCITY:
+    			rospy.logwarn(f"Angular velocity {angular_velocity} below min threshold? Clamped to {-MAX_ANGULAR_VELOCITY}.")
+    		
 		
     		# Log the validated input
     		rospy.loginfo(f"Control command received: Turtle {turtle_number} | Linear Velocity: {linear_velocity} | Angular Velocity: {angular_velocity}")
@@ -109,16 +127,17 @@ class UI:
     	else:
     		pub = self.cmd_vel_pub_turtle2
 
-    	# Publish the velocity for 1 minute
+    	# Publish the velocity for 1 second
     	start_time = time.time()
     	while time.time() - start_time < 1.0 and not rospy.is_shutdown():
     		pub.publish(cmd_vel)
     		rospy.sleep(0.1)  # Sleep for a short period to avoid overloading the system
 
+	#Stop turtle
     	cmd_vel.linear.x = 0
     	cmd_vel.angular.z = 0
     	pub.publish(cmd_vel)
-    	rospy.loginfo(f"Stopped publishing velocities to turtle {turtle_number} after 1 second.")
+    	#rospy.loginfo(f"Stopped publishing velocities to turtle {turtle_number} after 1 second.")
 
 
 
