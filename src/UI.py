@@ -52,8 +52,40 @@ class UI:
             self.input_callback(user_input)
 
     def input_callback(self, text):
-        """Callback function that logs the text entered in the terminal."""
-        rospy.loginfo(f"User input: {text}")
+    	"""Callback function that checks user input and logs the details."""
+    	# Try to parse the input and validate the format
+    	try:
+    		# Split the input text by spaces
+    		parts = text.split()
+		
+    		# Ensure the input has exactly 3 parts: turtle number, linear velocity, angular velocity
+    		if len(parts) != 3:
+    			raise ValueError("Incorrect format! Expected 'turtle_number linear_velocity angular_velocity'.")
+		
+    		# Parse the first part as turtle number (either 1 or 2)
+    		turtle_number = parts[0]
+    		if turtle_number not in ['1', '2']:
+    			raise ValueError("Turtle number must be either '1' or '2'.")
+		
+    		# Check if the linear velocity is a valid number (float)
+    		try:
+    			linear_velocity = float(parts[1])  # Try to convert linear velocity to float
+    		except ValueError:
+    			raise ValueError("Linear velocity must be a valid number.")
+		
+    		# Parse the third part as angular velocity (float)
+    		try:
+    			angular_velocity = float(parts[2])
+    		except ValueError:
+    			raise ValueError("Angular velocity must be a valid number.")
+		
+    		# Log the validated input
+    		rospy.loginfo(f"Control command received: Turtle {turtle_number} | Linear Velocity: {linear_velocity} | Angular Velocity: {angular_velocity}")
+		
+    	except ValueError as e:
+    		# If an error occurs, log an error message
+    		rospy.logerr(f"Invalid input: {e}")
+
 
 
 if __name__ == '__main__':
