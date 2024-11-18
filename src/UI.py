@@ -3,6 +3,8 @@
 import rospy
 import threading
 from turtlesim.srv import Spawn
+from geometry_msgs.msg import Twist
+import time
 
 class UI:
     def __init__(self):
@@ -28,6 +30,10 @@ class UI:
 
         # Spawn the turtle
         self.spawn_turtle()
+        
+        # Publisher for cmd_vel
+        self.cmd_vel_pub_turtle1 = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size=10)
+        self.cmd_vel_pub_turtle2 = rospy.Publisher('/turtle2/cmd_vel', Twist, queue_size=10)
 
         # Start listening to the terminal in a separate thread
         self.listen_to_input()
@@ -81,10 +87,38 @@ class UI:
 		
     		# Log the validated input
     		rospy.loginfo(f"Control command received: Turtle {turtle_number} | Linear Velocity: {linear_velocity} | Angular Velocity: {angular_velocity}")
+    		
+    		# Start sending the velocities for one minute
+    		self.send_velocity(turtle_number, linear_velocity, angular_velocity)
+            
 		
     	except ValueError as e:
     		# If an error occurs, log an error message
     		rospy.logerr(f"Invalid input: {e}")
+    		
+    def send_velocity(self, turtle_number, linear_velocity, angular_velocity):
+    	"""Sends the linear and angular velocities for one minute to the selected turtle."""
+    	# Create a Twist message
+    	cmd_vel = Twist()
+    	cmd_vel.linear.x = linear_velocity
+    	cmd_vel.angular.z = angular_velocity
+        
+    	# Determine the correct publisher based on the turtle number
+    	if turtle_number == '1':
+    		pub = self.cmd_vel_pub_turtle1
+    	else:
+    		pub = self.cmd_vel_pub_turtle2
+
+    	# Publish the velocity for 1 minute
+    	start_time = time.time()
+    	while time.time() - start_time < 1.0 and not rospy.is_shutdown():
+    		pub.publish(cmd_vel)
+    		rospy.sleep(0.1)  # Sleep for a short period to avoid overloading the system
+
+    	cmd_vel.linear.x = 0
+    	cmd_vel.angular.z = 0
+    	pub.publish(cmd_vel)
+    	rospy.loginfo(f"Stopped publishing velocities to turtle {turtle_number} after 1 second.")
 
 
 
