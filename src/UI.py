@@ -34,9 +34,20 @@ class UI:
         # Publisher for cmd_vel
         self.cmd_vel_pub_turtle1 = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size=10)
         self.cmd_vel_pub_turtle2 = rospy.Publisher('/turtle2/cmd_vel', Twist, queue_size=10)
+        
+        self.turtle_number = None
+        self.linear_velocity = None
+        self.angular_velocity = None 
+        self.turtle_moving = False
+        self.moving_start_time = None
+        
+        #Initialize a timer for periodic control command
+        self.moving_timer = rospy.Timer(rospy.Duration(0.2), self.send_velocity)
 
         # Start listening to the terminal in a separate thread
         self.listen_to_input()
+        
+
 
     def spawn_turtle(self):
         """Spawns a new turtle in the turtlesim environment."""
@@ -69,19 +80,19 @@ class UI:
     			raise ValueError("Incorrect format! Expected 3 arguments which are : 'turtle_number linear_velocity angular_velocity'.")
 		
     		# Parse the first part as turtle number (either 1 or 2)
-    		turtle_number = parts[0]
-    		if turtle_number not in ['1', '2']:
+    		self.turtle_number = parts[0]
+    		if self.turtle_number not in ['1', '2']:
     			raise ValueError("Turtle number must be either '1' or '2'.")
 		
     		# Check if the linear velocity is a valid number (float)
     		try:
-    			linear_velocity = float(parts[1])  # Try to convert linear velocity to float
+    			self.linear_velocity = float(parts[1])  # Try to convert linear velocity to float
     		except ValueError:
     			raise ValueError("Linear velocity must be a valid number.")
 		
     		# Parse the third part as angular velocity (float)
     		try:
-    			angular_velocity = float(parts[2])
+    			self.angular_velocity = float(parts[2])
     		except ValueError:
     			raise ValueError("Angular velocity must be a valid number.")
     			
@@ -89,55 +100,59 @@ class UI:
     		MAX_LINEAR_VELOCITY = 2.5
     		MAX_ANGULAR_VELOCITY = 1.5
     		
-    		if linear_velocity > MAX_LINEAR_VELOCITY:
-    			rospy.logwarn(f"linear velocity {linear_velocity} exceeds max threshold. Clamped to {MAX_LINEAR_VELOCITY}.")
-    			linear_velocity = MAX_LINEAR_VELOCITY
-    		elif linear_velocity < -MAX_LINEAR_VELOCITY:
-    			rospy.logwarn(f"linear velocity {linear_velocity} below min threshold. Clamped to {-MAX_LINEAR_VELOCITY}.")
-    			linear_velocity = -MAX_LINEAR_VELOCITY
+    		if self.linear_velocity > MAX_LINEAR_VELOCITY:
+    			rospy.logwarn(f"linear velocity {self.linear_velocity} exceeds max threshold. Clamped to {MAX_LINEAR_VELOCITY}.")
+    			self.linear_velocity = MAX_LINEAR_VELOCITY
+    		elif self.linear_velocity < -MAX_LINEAR_VELOCITY:
+    			rospy.logwarn(f"linear velocity {self.linear_velocity} below min threshold. Clamped to {-MAX_LINEAR_VELOCITY}.")
+    			self.linear_velocity = -MAX_LINEAR_VELOCITY
     		
-    		if angular_velocity > MAX_ANGULAR_VELOCITY:
-    			rospy.logwarn(f"Angular velocity {angular_velocity} exceeds max threshold. Clamped to {MAX_ANGULAR_VELOCITY}.")
-    			angular_velocity = MAX_ANGULAR_VELOCITY
-    		elif angular_velocity < -MAX_ANGULAR_VELOCITY:
-    			rospy.logwarn(f"Angular velocity {angular_velocity} below min threshold? Clamped to {-MAX_ANGULAR_VELOCITY}.")
+    		if self.angular_velocity > MAX_ANGULAR_VELOCITY:
+    			rospy.logwarn(f"Angular velocity {self.angular_velocity} exceeds max threshold. Clamped to {MAX_ANGULAR_VELOCITY}.")
+    			self.angular_velocity = MAX_ANGULAR_VELOCITY
+    		elif self.angular_velocity < -MAX_ANGULAR_VELOCITY:
+    			rospy.logwarn(f"Angular velocity {self.angular_velocity} below min threshold? Clamped to {-MAX_ANGULAR_VELOCITY}.")
+    			self.angular_velocity = -MAX_ANGULAR_VELOCITY
     		
 		
     		# Log the validated input
-    		rospy.loginfo(f"Control command received: Turtle {turtle_number} | Linear Velocity: {linear_velocity} | Angular Velocity: {angular_velocity}")
+    		rospy.loginfo(f"Control command received: Turtle {self.turtle_number} | Linear Velocity: {self.linear_velocity} | Angular Velocity: {self.angular_velocity}")
     		
     		# Start sending the velocities for one minute
-    		self.send_velocity(turtle_number, linear_velocity, angular_velocity)
+    		self.moving_start_time = time.time()
+    		self.turtle_moving = True
             
 		
     	except ValueError as e:
     		# If an error occurs, log an error message
     		rospy.logerr(f"Invalid input: {e}")
     		
-    def send_velocity(self, turtle_number, linear_velocity, angular_velocity):
+    def send_velocity(self, event):
     	"""Sends the linear and angular velocities for one minute to the selected turtle."""
-    	# Create a Twist message
-    	cmd_vel = Twist()
-    	cmd_vel.linear.x = linear_velocity
-    	cmd_vel.angular.z = angular_velocity
+    	if self.turtle_moving : 
+    		# Create a Twist message
+    		cmd_vel = Twist()
+    		
+    		# Determine the correct publisher based on the turtle number
+    		if self.turtle_number == '1':
+    			pub = self.cmd_vel_pub_turtle1
+    		else:
+    			pub = self.cmd_vel_pub_turtle2
+    			
+    		if time.time() - self.moving_start_time > 1.0:
+    			#Stop turtle
+    			cmd_vel.linear.x = 0
+    			cmd_vel.angular.z = 0
+    			pub.publish(cmd_vel)
+    			self.turtle_moving = False
+    			
+    		else : 
+    			
+    			cmd_vel.linear.x = self.linear_velocity
+    			cmd_vel.angular.z = self.angular_velocity
         
-    	# Determine the correct publisher based on the turtle number
-    	if turtle_number == '1':
-    		pub = self.cmd_vel_pub_turtle1
-    	else:
-    		pub = self.cmd_vel_pub_turtle2
+    			pub.publish(cmd_vel)
 
-    	# Publish the velocity for 1 second
-    	start_time = time.time()
-    	while time.time() - start_time < 1.0 and not rospy.is_shutdown():
-    		pub.publish(cmd_vel)
-    		rospy.sleep(0.1)  # Sleep for a short period to avoid overloading the system
-
-	#Stop turtle
-    	cmd_vel.linear.x = 0
-    	cmd_vel.angular.z = 0
-    	pub.publish(cmd_vel)
-    	#rospy.loginfo(f"Stopped publishing velocities to turtle {turtle_number} after 1 second.")
 
 
 
