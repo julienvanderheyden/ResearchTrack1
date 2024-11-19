@@ -31,7 +31,7 @@ class Distance:
         self.distance_threshold = 1.5 
         
         #Initialize a timer for periodic stop command
-        self.stop_timer = rospy.Timer(rospy.Duration(0.01), self.send_stop_commands)
+        self.stop_timer = rospy.Timer(rospy.Duration(0.01), self.check_distances)
         
         #Flag to track if the turtles are too close
         self.turtles_too_close = False
@@ -46,56 +46,43 @@ class Distance:
     def turtle1_pose_callback(self, msg):
         """Callback function to store turtle1's position."""
         self.turtle1_position = (msg.x, msg.y)
-        self.calculate_and_publish_distance()
 
     def turtle2_pose_callback(self, msg):
         """Callback function to store turtle2's position."""
-        self.turtle2_position = (msg.x, msg.y)
-        self.calculate_and_publish_distance()
-
-    def calculate_and_publish_distance(self):
-        """Calculate and publish the relative distance between turtle1 and turtle2."""
-        if self.turtle1_position and self.turtle2_position:
-            x1, y1 = self.turtle1_position
-            x2, y2 = self.turtle2_position
-
-            # Calculate the Euclidean distance between the two turtles
-            distance = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-
-            # Create a Float32 message to publish the distance
-            distance_msg = Float32()
-            distance_msg.data = distance
-
-            # Publish the distance
-            self.distance_pub.publish(distance_msg)
-
-            #rospy.loginfo(f"Distance between turtle1 and turtle2: {distance:.2f} meters")
-            
-            if distance < self.distance_threshold and distance < self.previous_distance:
-            	self.turtles_too_close = True 
-            	self.stopping_time = time.time()
-            	rospy.logwarn(f"Turtles are too close! Distance: {distance:.2f} m. Stopping turtles. ")
-            	
-            else:
-            	self.turtles_too_close = False
-            
-            self.previous_distance = distance
-            	
-    def send_stop_commands(self, event):
-    	"""Periodically send stop commands to turtles if they are too close"""
-    	if self.turtles_too_close:
-    		if time.time() - self.stopping_time > 1.0:
-    			self.turtles_too_close = False
+        self.turtle2_position = (msg.x, msg.y)	    		
+	    		
+	    	
+    def check_distances(self, event):
+    	if self.turtle1_position and self.turtle2_position:
+    		x1, y1 = self.turtle1_position
+    		x2, y2 = self.turtle2_position 
     		
-    		else : 
-	    		stop_msg = Twist()
-	    		stop_msg.linear.x = 0 
-	    		stop_msg.angular.z = 0
-	    		self.turtle1_cmd_vel_pub.publish(stop_msg)
-	    		self.turtle2_cmd_vel_pub.publish(stop_msg)
-	    		rospy.loginfo("Sent stop command to both turtles.")
+    		#Calculate the Euclidean distance between the two turtles 
+    		distance = math.sqrt((x2-x1)**2 + (y2-y1)**2)
     		
- 
+    		#Publish the distance
+    		distance_msg = Float32()
+    		distance_msg.data = distance
+    		self.distance_pub.publish(distance_msg)
+    		
+    		if not self.turtles_too_close and distance < self.distance_threshold and distance < self.previous_distance :
+    			self.turtles_too_close = True 
+    			self.stopping_time = time.time()
+    			rospy.logwarn(f"Turtles are too close! Distance: {distance:.2f} m. Stopping turtles. ")
+    			
+    		if self.turtles_too_close : 
+    			if time.time() - self.stopping_time > 1.0:
+    				self.turtles_too_close = False
+    				
+    			else: 
+    				stop_msg = Twist()
+    				stop_msg.linear.x = 0
+    				stop_msg.angular.z = 0
+    				self.turtle1_cmd_vel_pub.publish(stop_msg)
+    				self.turtle2_cmd_vel_pub.publish(stop_msg)
+    				rospy.loginfo("Sent stop command to both turtles")
+	    		
+    		self.previous_distance = distance
 
 if __name__ == '__main__':
     try:
