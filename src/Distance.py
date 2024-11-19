@@ -5,6 +5,7 @@ from turtlesim.msg import Pose
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float32
 import math
+import time
 
 class Distance:
     def __init__(self):
@@ -27,13 +28,19 @@ class Distance:
         self.turtle2_position = None
         
         #Define a "too close" threshold
-        self.distance_threshold = 0.5 
+        self.distance_threshold = 1.5 
         
         #Initialize a timer for periodic stop command
-        self.stop_timer = rospy.Timer(rospy.Duration(0.05), self.send_stop_commands)
+        self.stop_timer = rospy.Timer(rospy.Duration(0.01), self.send_stop_commands)
         
         #Flag to track if the turtles are too close
         self.turtles_too_close = False
+        
+        #Remember the stopping time in order not to continuously block the turtles
+        self.stopping_time = None
+        
+        #Remember the previous distance to compute if turtle are getting closer or not 
+        self.previous_distance = None 
         
 
     def turtle1_pose_callback(self, msg):
@@ -64,22 +71,29 @@ class Distance:
 
             #rospy.loginfo(f"Distance between turtle1 and turtle2: {distance:.2f} meters")
             
-            if distance < self.distance_threshold :
+            if distance < self.distance_threshold and distance < self.previous_distance:
             	self.turtles_too_close = True 
+            	self.stopping_time = time.time()
             	rospy.logwarn(f"Turtles are too close! Distance: {distance:.2f} m. Stopping turtles. ")
             	
             else:
             	self.turtles_too_close = False
+            
+            self.previous_distance = distance
             	
     def send_stop_commands(self, event):
     	"""Periodically send stop commands to turtles if they are too close"""
     	if self.turtles_too_close:
-    		stop_msg = Twist()
-    		stop_msg.linear.x = 0 
-    		stop_msg.angular.z = 0
-    		self.turtle1_cmd_vel_pub.publish(stop_msg)
-    		self.turtle2_cmd_vel_pub.publish(stop_msg)
-    		rospy.loginfo("Sent stop command to both turtles.")
+    		if time.time() - self.stopping_time > 1.0:
+    			self.turtles_too_close = False
+    		
+    		else : 
+	    		stop_msg = Twist()
+	    		stop_msg.linear.x = 0 
+	    		stop_msg.angular.z = 0
+	    		self.turtle1_cmd_vel_pub.publish(stop_msg)
+	    		self.turtle2_cmd_vel_pub.publish(stop_msg)
+	    		rospy.loginfo("Sent stop command to both turtles.")
     		
  
 
