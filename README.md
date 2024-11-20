@@ -29,11 +29,11 @@ The **UI** node spawns a second turtle in the Turtlesim environment and allows t
 The **Distance** node monitors the relative distance between the turtles and ensures safe operation.
 
 - **Published Topic**:
-+ `/relative_distance` (`std_msgs/Float32`): The real-time distance between the two turtles.
+	- `/relative_distance` (`std_msgs/Float32`): The real-time distance between the two turtles.
 
 - **Key Features**:
-+ **Collision Avoidance**: If the turtles come too close (less than 1.5 meters), they are stopped to prevent collisions.
-+ **Boundary Monitoring**: Prevents turtles from exiting the simulation area by stopping their motion if they approach the edges.
+	- **Collision Avoidance**: If the turtles come too close (less than 1.5 meters), they are stopped to prevent collisions.
+	- **Boundary Monitoring**: Prevents turtles from exiting the simulation area by stopping their motion if they approach the edges.
 
 ---
 
