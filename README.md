@@ -15,13 +15,13 @@ The **UI** node spawns a second turtle in the Turtlesim environment and allows t
 <turtle_number> <linear_velocity> <angular_velocity>
 ```
 
-+ `turtle_number`: Selects the turtle to control (`1` for the default turtle or `2` for the newly spawned turtle).
-+ `linear_velocity`: The forward/backward speed of the turtle (clamped between `-2.5` and `2.5`).
-+ `angular_velocity`: The rotational speed of the turtle (clamped between `-1.5` and `1.5`).
+	- `turtle_number`: Selects the turtle to control (`1` for the default turtle or `2` for the newly spawned turtle).
+	- `linear_velocity`: The forward/backward speed of the turtle (clamped between `-2.5` and `2.5`).
+	- `angular_velocity`: The rotational speed of the turtle (clamped between `-1.5` and `1.5`).
 
 - **Behavior**:
-+ Velocities exceeding the thresholds are automatically clamped.
-+ The entered command is applied for **1 second**, after which the user can input a new command.
+	- Velocities exceeding the thresholds are automatically clamped.
+	- The entered command is applied for **1 second**, after which the user can input a new command.
 
 ---
 
@@ -49,7 +49,7 @@ This will automatically:
 1. Start the Turtlesim simulation.
 2. Launch the **UI** and **Distance** nodes.
 
-By default, the second turtle will be spawned at `(7,7)` with an orientation of `0.0`. This can changed by modifying the following lines in the launch file: 
+By default, the second turtle will be spawned at `(7,7)` with an orientation of `0.0`. This can be changed by modifying the following lines in the launch file: 
 ```xml
 <!-- UI params -->
 <param name="x" value="7.0" />
