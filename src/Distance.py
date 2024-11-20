@@ -34,13 +34,17 @@ class Distance:
         self.stop_timer = rospy.Timer(rospy.Duration(0.01), self.check_distances)
         
         #Flag to track if the turtles are too close
-        self.turtles_too_close = False
+        self.turtles_should_stop = False
         
         #Remember the stopping time in order not to continuously block the turtles
         self.stopping_time = None
         
         #Remember the previous distance to compute if turtle are getting closer or not 
         self.previous_distance = None 
+        self.previous_x1 = None
+        self.previous_y1 = None 
+        self.previous_x2 = None
+        self.previous_y2 = None
         
 
     def turtle1_pose_callback(self, msg):
@@ -65,14 +69,27 @@ class Distance:
     		distance_msg.data = distance
     		self.distance_pub.publish(distance_msg)
     		
-    		if not self.turtles_too_close and distance < self.distance_threshold and distance < self.previous_distance :
-    			self.turtles_too_close = True 
+    		#check if turtles are too close 
+    		if not self.turtles_should_stop and distance < self.distance_threshold and distance < self.previous_distance :
+    			self.turtles_should_stop = True 
     			self.stopping_time = time.time()
     			rospy.logwarn(f"Turtles are too close! Distance: {distance:.2f} m. Stopping turtles. ")
     			
-    		if self.turtles_too_close : 
+    		#check if turtles are going out of the boundaries
+    		x1_out = (x1 > 10 and x1 > self.previous_x1) or (x1 < 1 and x1 < self.previous_x1) 
+    		x2_out = (x2 > 10 and x2 > self.previous_x2) or (x2 < 1 and x2 < self.previous_x2) 
+    		y1_out = (y1 > 10 and y1 > self.previous_y1) or (y1 < 1 and y1 < self.previous_y1) 
+    		y2_out = (y2 > 10 and y2 > self.previous_y2) or (y2 < 1 and y2 < self.previous_y2) 
+    		out_boundaries = x1_out or x2_out or y1_out or y2_out 
+    		
+    		if not self.turtles_should_stop and out_boundaries : 
+    			self.turtles_should_stop = True
+    			self.stopping_time = time.time()
+    			rospy.logwarn(f"Turtles are getting out! Stopping turtles. ")
+    			
+    		if self.turtles_should_stop : 
     			if time.time() - self.stopping_time > 1.0:
-    				self.turtles_too_close = False
+    				self.turtles_should_stop = False
     				
     			else: 
     				stop_msg = Twist()
@@ -80,9 +97,13 @@ class Distance:
     				stop_msg.angular.z = 0
     				self.turtle1_cmd_vel_pub.publish(stop_msg)
     				self.turtle2_cmd_vel_pub.publish(stop_msg)
-    				rospy.loginfo("Sent stop command to both turtles")
+    				#rospy.loginfo("Sent stop command to both turtles")
 	    		
     		self.previous_distance = distance
+    		self.previous_x1 = x1
+    		self.previous_y1 = y1
+    		self.previous_x2 = x2
+    		self.previous_y2 = y2
 
 if __name__ == '__main__':
     try:

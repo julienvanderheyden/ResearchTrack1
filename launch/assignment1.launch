@@ -1,0 +1,31 @@
+<launch>
+    <!-- Launch turtlesim node -->
+    <node
+        pkg="turtlesim"
+        type="turtlesim_node"
+        name="turtlesim_node"
+        output="screen" />
+        
+    <!-- Launch UI node --> 
+    <node
+        pkg="assignment1_rt"
+        type="UI.py"
+        name="ui_node"
+        output="screen">
+        
+        <!-- UI params -->
+        <param name="x" value="7.0" />
+        <param name="y" value="7.0" />
+        <param name="theta" value="0.0" />
+        <param name="name" value="turtle2" />
+    </node>
+
+    <!-- Launch Distance Node -->
+    <node
+        pkg="assignment1_rt"
+        type="Distance.py"
+        name="distance_node"
+        output="screen" />
+   
+</launch>
+
