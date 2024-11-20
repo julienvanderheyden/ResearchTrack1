@@ -12,10 +12,10 @@ class UI:
         rospy.init_node('UI', anonymous=True)
 
         # Read parameters for the turtle's position, orientation, and name
-        self.x = rospy.get_param('~x', 5.0)
-        self.y = rospy.get_param('~y', 5.0)
+        self.x = rospy.get_param('~x', 7.0)
+        self.y = rospy.get_param('~y', 7.0)
         self.theta = rospy.get_param('~theta', 0.0)
-        self.name = rospy.get_param('~name', 'turtle2')
+        self.name = 'turtle2'
 
         # Wait for the '/spawn' service to be available
         rospy.loginfo("Waiting for the turtlesim 'spawn' service...")

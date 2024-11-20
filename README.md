@@ -15,13 +15,13 @@ The **UI** node spawns a second turtle in the Turtlesim environment and allows t
 <turtle_number> <linear_velocity> <angular_velocity>
 ```
 
-- `turtle_number`: Selects the turtle to control (`1` for the default turtle or `2` for the newly spawned turtle).
-- `linear_velocity`: The forward/backward speed of the turtle (clamped between `-2.5` and `2.5`).
-- `angular_velocity`: The rotational speed of the turtle (clamped between `-1.5` and `1.5`).
++ `turtle_number`: Selects the turtle to control (`1` for the default turtle or `2` for the newly spawned turtle).
++ `linear_velocity`: The forward/backward speed of the turtle (clamped between `-2.5` and `2.5`).
++ `angular_velocity`: The rotational speed of the turtle (clamped between `-1.5` and `1.5`).
 
 - **Behavior**:
-- Velocities exceeding the thresholds are automatically clamped.
-- The entered command is applied for **1 second**, after which the user can input a new command.
++ Velocities exceeding the thresholds are automatically clamped.
++ The entered command is applied for **1 second**, after which the user can input a new command.
 
 ---
 
@@ -29,11 +29,11 @@ The **UI** node spawns a second turtle in the Turtlesim environment and allows t
 The **Distance** node monitors the relative distance between the turtles and ensures safe operation.
 
 - **Published Topic**:
-- `/relative_distance` (`std_msgs/Float32`): The real-time distance between the two turtles.
++ `/relative_distance` (`std_msgs/Float32`): The real-time distance between the two turtles.
 
 - **Key Features**:
-- **Collision Avoidance**: If the turtles come too close (less than 1.5 meters), they are stopped to prevent collisions.
-- **Boundary Monitoring**: Prevents turtles from exiting the simulation area by stopping their motion if they approach the edges.
++ **Collision Avoidance**: If the turtles come too close (less than 1.5 meters), they are stopped to prevent collisions.
++ **Boundary Monitoring**: Prevents turtles from exiting the simulation area by stopping their motion if they approach the edges.
 
 ---
 
@@ -48,6 +48,40 @@ roslaunch assignment1_rt assignment1.launch
 This will automatically:
 1. Start the Turtlesim simulation.
 2. Launch the **UI** and **Distance** nodes.
+
+By default, the second turtle will be spawned at `(7,7)` with an orientation of `0.0`. This can changed by modifying the following lines in the launch file: 
+```xml
+<!-- UI params -->
+<param name="x" value="7.0" />
+<param name="y" value="7.0" />
+<param name="theta" value="0.0" />
+```
+
+### Option 2: Running Nodes Manually
+If you prefer to launch the nodes individually:
+
+1. Start the Turtlesim simulation:
+```bash
+rosrun turtlesim turtlesim_node
+```
+
+2. Run the **UI** Node : 
+
+```bash
+rosrun assignment1_rt UI.py
+```
+
+3. Run the **Distance** Node : 
+
+```bash
+rosrun assignment1_rt Distance.py
+```
+
+In this case also, the turtle is spawned by default at `(7,7)` with an orientation of `0.0`. To modify this, the **UI** node should be run with the following command: 
+
+```bash
+rosrun assignment1_rt UI.py _x:=3.0 _y:=4.0 _theta:=1.57
+```
 
 ---
 
