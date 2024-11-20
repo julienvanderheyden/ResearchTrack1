@@ -15,9 +15,9 @@ The **UI** node spawns a second turtle in the Turtlesim environment and allows t
 <turtle_number> <linear_velocity> <angular_velocity>
 ```
 
-	- `turtle_number`: Selects the turtle to control (`1` for the default turtle or `2` for the newly spawned turtle).
-	- `linear_velocity`: The forward/backward speed of the turtle (clamped between `-2.5` and `2.5`).
-	- `angular_velocity`: The rotational speed of the turtle (clamped between `-1.5` and `1.5`).
+- `turtle_number`: Selects the turtle to control (`1` for the default turtle or `2` for the newly spawned turtle).
+- `linear_velocity`: The forward/backward speed of the turtle (clamped between `-2.5` and `2.5`).
+- `angular_velocity`: The rotational speed of the turtle (clamped between `-1.5` and `1.5`).
 
 - **Behavior**:
 	- Velocities exceeding the thresholds are automatically clamped.
